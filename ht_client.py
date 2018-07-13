@@ -4,6 +4,7 @@ import json
 import logging
 import requests
 from time import sleep
+import argparse
 from jinja2 import Environment, FileSystemLoader
 import matplotlib.pyplot as plt
 
@@ -16,30 +17,61 @@ SLEEP_INTERVAL = 30 # Seconds
 HTML_TEMPLATE = None
 
 
-def main():
+def main_args():
+    args = get_args()
+    run(args.address, args.port, args.samples, args.interval)
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        description=(
+            'Service to query a servcer running ht_server service and' +
+            ' generate an HTML report of the results.'
+        )
+    )
+    parser.add_argument(
+        'address', type=str, help='Address of the server'
+    )
+    parser.add_argument(
+        'port', type=int, help='Port to connect through to the server'
+    )
+    parser.add_argument(
+        '--interval', type=int, default=SLEEP_INTERVAL,
+        help='Interval between queries (seconds). Default={}'.format(
+            SLEEP_INTERVAL)
+    )
+    parser.add_argument(
+        '--samples', type=int, default=NUM_OF_SAMPLES,
+        help='Interval between queries. Default={}'.format(NUM_OF_SAMPLES)
+    )
+    return parser.parse_args()
+
+
+def run(address, port, samples, sleep_interval):
+    logger.info(
+        'Beginning queries session.' +
+        ' Address %s, Port %s, Samples %s, Interval %s',
+        address, port, samples, sleep_interval)
     set_global_jinja_template()
     time_samples = []
     humidity_samples = []
     temperature_samples = []
     for sample in xrange(0, NUM_OF_SAMPLES):
-        data = get_data_from_server()
-        logger.info(
-            'Sample %s/%s::data from server: %s',
-            sample+1, NUM_OF_SAMPLES, data
-        )
+        data = get_data_from_server(address, port)
+        logger.info('Sample %s/%s::data from server: %s',
+                    sample+1, NUM_OF_SAMPLES, data)
         time = data.get('time')
         humidity = data.get('humidity')
         temperature = data.get('temperature')
         time_samples.append(time)
-        print "Time: {} Humidity: {} Temperature: {}".format(
-            time, humidity, temperature
-        )
+        print("Time: {} Humidity: {} Temperature: {}").format(time, humidity,
+                                                              temperature)
         humidity_samples.append(humidity)
         temperature_samples.append(temperature)
         if(sample > 1):
             make_graph_image(humidity_samples, temperature_samples)
             render_jinja_template(sample, temperature, humidity)
-        sleep(SLEEP_INTERVAL)
+        sleep(sleep_interval)
 
 
 def make_graph_image(humidity, temperature):
@@ -83,4 +115,5 @@ def get_data_from_server(server_url='localhost', port=4000):
 
 
 if __name__ == '__main__':
-    main()
+    main_args()
+    #main()

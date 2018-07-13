@@ -1,14 +1,13 @@
 #!/usr/bin/python
 
-from Adafruit_DHT import read as dht_read
 import logging
-import base64
 import json
 from time import time
 from uuid import uuid4
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
+from Adafruit_DHT import read as dht_read
 
 
 logging.basicConfig(filename='/tmp/dht_server.log', level=logging.DEBUG)
